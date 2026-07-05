@@ -1,15 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {
@@ -40,10 +35,9 @@ input {
   border: 1px solid #d1d5db;
   border-radius: 5px;
   font-size: 16px;
-  color: #000000 
-  background-color: #ffffff 
+  color: #000000;
+  background-color: #ffffff;
 }
-
 
 .add-btn {
   width: 100%;
@@ -60,7 +54,6 @@ input {
 .add-btn:hover {
   background-color: #6c95d0;
 }
-
 
 ul {
   padding: 0;

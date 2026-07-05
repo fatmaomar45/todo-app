@@ -6,7 +6,7 @@ export default function Home() {
   const [list, setList] = useState<string[]>([]);
 
   function addTask() {
-    if (task.trim() === "") return; // Prevent adding empty tasks
+    if (task.trim() === "") return; 
     setList([...list, task]);
     setTask("");
   }
