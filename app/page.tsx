@@ -1,105 +1,91 @@
+
 "use client";
+import { useState, useEffect } from "react";
 
-import { useEffect, useState } from "react";
-
-type Task = {
-  text: string;
-  done: boolean;
-};
-
-export default function Home() {
-  const [task, setTask] = useState("");
-  const [list, setList] = useState<Task[]>([]);
+export default function TodoApp() {
+  const [tasks, setTasks] = useState<{ id: number; text: string; completed: boolean }[]>([]);
+  const [input, setInput] = useState("");
 
   
   useEffect(() => {
-    const saved = localStorage.getItem("tasks");
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-
-        
-        if (Array.isArray(parsed)) {
-          const cleaned = parsed.map((item) =>
-            typeof item === "string"
-              ? { text: item, done: false }
-              : item
-          );
-
-          setList(cleaned);
-        }
-      } catch (e) {
-        console.error("Invalid localStorage data");
-      }
+    const savedTasks = localStorage.getItem("todo-tasks");
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
     }
   }, []);
 
   
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(list));
-  }, [list]);
+    if (tasks.length > 0) {
+      localStorage.setItem("todo-tasks", JSON.stringify(tasks));
+    }
+  }, [tasks]);
 
-  function addTask() {
-    if (task.trim() === "") return;
+  const addTask = () => {
+    if (!input.trim()) return;
+    const newTasks = [...tasks, { id: Date.now(), text: input, completed: false }];
+    setTasks(newTasks);
+    localStorage.setItem("todo-tasks", JSON.stringify(newTasks));
+    setInput("");
+  };
 
-    setList((prev) => [
-      ...prev,
-      { text: task, done: false },
-    ]);
-
-    setTask("");
-  }
-
-  function deleteTask(index: number) {
-    setList((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  function toggleTask(index: number) {
-    setList((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, done: !item.done } : item
-      )
+  const toggleComplete = (id: number) => {
+    const newTasks = tasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
     );
-  }
+    setTasks(newTasks);
+    localStorage.setItem("todo-tasks", JSON.stringify(newTasks));
+  };
+
+  const deleteTask = (id: number) => {
+    const newTasks = tasks.filter(task => task.id !== id);
+    setTasks(newTasks);
+    localStorage.setItem("todo-tasks", JSON.stringify(newTasks));
+    if (newTasks.length === 0) {
+      localStorage.removeItem("todo-tasks");
+    }
+  };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="container mx-auto">
       <h1>Todo App</h1>
-
-      <input
-        value={task}
-        onChange={(e) => setTask(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && addTask()}
-        placeholder="Enter a task..."
-        style={{
-          padding: "5px",
-          marginRight: "10px",
-          backgroundColor: "lightblue",
-          color: "#000",
-        }}
-      />
-
-      <button onClick={addTask}>Add</button>
+      
+      
+      <div className="flex gap-2 mb-4">
+        <input 
+          type="text" 
+          placeholder="Enter a task..." 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addTask()}
+        />
+        <button className="add-btn" onClick={addTask} style={{ width: "100px", marginBottom: "10px" }}>
+          Add
+        </button>
+      </div>
 
       <ul>
-        {list.map((item, index) => (
-          <li key={index} style={{ margin: "10px 0" }}>
-            <span
-              onClick={() => toggleTask(index)}
-              style={{
-                marginRight: "10px",
-                cursor: "pointer",
-                textDecoration: item.done
-                  ? "line-through"
-                  : "none",
-                color: item.done ? "gray" : "black",
-              }}
-            >
-              {item.text}
-            </span>
-
-            <button onClick={() => deleteTask(index)}>
+        {tasks.map((task) => (
+          <li key={task.id} className="todo-item">
+            <div className="flex items-center gap-3">
+              <input 
+                type="checkbox" 
+                checked={task.completed} 
+                onChange={() => toggleComplete(task.id)}
+                style={{ width: "auto", margin: 0, cursor: "pointer" }}
+              />
+              <span 
+                className="todo-text" 
+                style={{ 
+                  textDecoration: task.completed ? "line-through" : "none",
+                  opacity: task.completed ? 0.5 : 1,
+                  color: "#ffffff" 
+                }}
+              >
+                {task.text}
+              </span>
+            </div>
+            <button className="dlt-btn" onClick={() => deleteTask(task.id)}>
               Delete
             </button>
           </li>
