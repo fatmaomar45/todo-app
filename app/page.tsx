@@ -1,43 +1,110 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
+
+type Task = {
+  text: string;
+  done: boolean;
+};
 
 export default function Home() {
   const [task, setTask] = useState("");
-  const [list, setList] = useState<string[]>([]);
+  const [list, setList] = useState<Task[]>([]);
+
+  
+  useEffect(() => {
+    const saved = localStorage.getItem("tasks");
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+
+        
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.map((item) =>
+            typeof item === "string"
+              ? { text: item, done: false }
+              : item
+          );
+
+          setList(cleaned);
+        }
+      } catch (e) {
+        console.error("Invalid localStorage data");
+      }
+    }
+  }, []);
+
+  
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(list));
+  }, [list]);
 
   function addTask() {
-    if (task.trim() === "") return; 
-    setList([...list, task]);
+    if (task.trim() === "") return;
+
+    setList((prev) => [
+      ...prev,
+      { text: task, done: false },
+    ]);
+
     setTask("");
   }
 
   function deleteTask(index: number) {
-    const newList = list.filter((item, i) => i !== index);
-    setList(newList);
+    setList((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function toggleTask(index: number) {
+    setList((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, done: !item.done } : item
+      )
+    );
   }
 
   return (
-    <div className="container" style={{ padding: "20px" }}>
+    <div style={{ padding: "20px" }}>
       <h1>Todo App</h1>
+
       <input
-        type="text"
         value={task}
         onChange={(e) => setTask(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && addTask()}
         placeholder="Enter a task..."
-        style={{ color: "#000000", padding: "5px", marginRight: "10px",backgroundColor:"#ffffff" }}
+        style={{
+          padding: "5px",
+          marginRight: "10px",
+          backgroundColor: "lightblue",
+          color: "#000",
+        }}
       />
-      <button className="add-btn" onClick={addTask}>Add</button>
+
+      <button onClick={addTask}>Add</button>
 
       <ul>
         {list.map((item, index) => (
           <li key={index} style={{ margin: "10px 0" }}>
-            <span style={{ marginRight: "10px" }}>{item}</span>
-            <button className="dlt-btn" onClick={() => deleteTask(index)}>Delete</button>
+            <span
+              onClick={() => toggleTask(index)}
+              style={{
+                marginRight: "10px",
+                cursor: "pointer",
+                textDecoration: item.done
+                  ? "line-through"
+                  : "none",
+                color: item.done ? "gray" : "black",
+              }}
+            >
+              {item.text}
+            </span>
+
+            <button onClick={() => deleteTask(index)}>
+              Delete
+            </button>
           </li>
         ))}
       </ul>
     </div>
   );
 }
-
-
